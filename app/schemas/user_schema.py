@@ -1,25 +1,21 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Literal
 
-# Modelo base con los atributos comunes de un usuario
+# Restricción de roles
+UserRole = Literal["admin", "support", "user"]
+
+# Campos base
 class UserBase(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50, examples=["johndoe"])
-    email: EmailStr = Field(..., examples=["john@example.com"])
-    role: str = Field(default="operator", examples=["admin"])
-    is_active: bool = Field(default=True)
+    name: str = Field(..., min_length=3, examples=["Luis Herrera"])
+    email: EmailStr = Field(..., examples=["luis@device.com"])
+    role: UserRole = Field(default="user", examples=["admin"])
+    is_active: bool = Field(default=True, examples=[True])
 
-# Modelo para la creación de usuarios (requiere contraseña)
+# Modelo para creación (entrada)
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6, examples=["secret123"])
+    pass
 
-# Modelo para la actualización parcial de usuarios (todos los campos opcionales)
-class UserUpdate(BaseModel):
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
-
-# Modelo para la respuesta de la API (no expone la contraseña e incluye el ID asignado)
+# Modelo de respuesta para la API (salida)
 class UserResponse(UserBase):
     id: int
 
