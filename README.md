@@ -92,7 +92,11 @@ El sistema utiliza excepciones personalizadas capturadas mediante la clase HTTPE
 ## Evidencias de Funcionamiento
 
 ### Documentación
+
+**Swagger UI**
 ![Swagger UI](imagenes/swagger_main.png)
+
+**ReDoc**
 ![ReDoc](imagenes/redoc_main.png)
 
 ### Endpoints CRUD
