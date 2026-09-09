@@ -1,92 +1,130 @@
-# Reto Integrador – API REST de Usuarios para device_systems
+# device_systems - API REST v2.0.0
 
-API REST funcional desarrollada con **FastAPI** y **Pydantic v2** para administrar usuarios del sistema `device_systems`, incluyendo validaciones avanzadas de esquemas, parámetros de consulta/ruta y cabeceras HTTP personalizadas.
+## Descripción
+Evolución de la API REST **device_systems** desarrollada en FastAPI. Implementa el CRUD completo del recurso users, separación de responsabilidades en 5 capas, manejo profesional de excepciones HTTP, inyección de dependencias con Depends() y documentación interactiva bajo estándar OpenAPI.
 
----
+## Tecnologías Utilizadas
+- Python 3.11+
+- FastAPI
+- Uvicorn
+- Pydantic v2
 
-## 🚀 Instalación y Ejecución
+## Instalación de Dependencias
 
-1. **Clonar el repositorio:**
-   git clone https://github.com/luisdavidherreraarroyom-ops/device_systems.git
+1. Clonar el repositorio:
+   ```bash
+   git clone [https://github.com/luisdavidherreraarroyom-ops/device_systems.git](https://github.com/luisdavidherreraarroyom-ops/device_systems.git)
    cd device_systems
 
+   python -m venv .venv
+# En Windows PowerShell:
+.\.venv\Scripts\Activate.ps1
 
-2. **Sincronizar dependencias con `uv`:**
-uv sync
+# Instalar dependencias:
+pip install -r requirements.txt
 
+# Comando para Ejecutar el Servidor
+python -m uvicorn app.main:app --reload
 
+# Acceso a la documentación interactiva:
 
-3. **Iniciar el servidor de desarrollo:**
-uv run uvicorn app.main:app --reload
+Swagger UI: http://127.0.0.1:8000/docs
 
+ReDoc: http://127.0.0.1:8000/redoc
 
+## Tabla de Endpoints
 
-4. **Acceder a la documentación interactiva:**
-Abre el navegador e ingresa a `http://127.0.0.1:8000/docs` para interactuar con Swagger UI.
+| Método | Ruta | Descripción | Estado Exitoso |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/users` | Obtener la lista completa de usuarios | `200 OK` |
+| `GET` | `/users/{user_id}` | Obtener un usuario por su ID | `200 OK` |
+| `POST` | `/users` | Crear un nuevo usuario | `201 Created` |
+| `PUT` | `/users/{user_id}` | Actualizar un usuario completamente | `200 OK` |
+| `PATCH` | `/users/{user_id}` | Actualizar parcialmente un usuario | `200 OK` |
+| `DELETE` | `/users/{user_id}` | Eliminar un usuario por su ID | `200 OK` |
 
----
+# Ejemplos de Peticiones y Respuestas
 
-## 📌 Endpoints de la API
+Crear Usuario (POST /users)
+Request Body:
 
-| Método | Endpoint | Descripción | Parámetros | Código HTTP |
-| --- | --- | --- | --- | --- |
-| **GET** | `/` | Health Check / Estado de la API | Ninguno | `200 OK` |
-| **POST** | `/users/` | Registrar un nuevo usuario | Body (JSON) | `201 Created` / `400 Bad Request` |
-| **GET** | `/users/` | Listar todos los usuarios | Query Params: `role`, `is_active` | `200 OK` |
-| **GET** | `/users/{user_id}` | Obtener usuario por su ID | Path Param: `user_id` | `200 OK` / `404 Not Found` |
+JSON
+{
+  "name": "Carlos Gomez",
+  "email": "carlos@example.com",
+  "role": "developer",
+  "is_active": true
+}
+Response (201 Created):
 
----
+JSON
+{
+  "name": "Carlos Gomez",
+  "email": "carlos@example.com",
+  "role": "developer",
+  "is_active": true,
+  "id": 3
+}
 
-## 🛡️ Estructura del Esquema (Pydantic)
+# Códigos de Estado Usados
 
-El modelo de datos valida las siguientes reglas de negocio:
+200 OK: Petición procesada correctamente.
 
-* **`name`**: Cadena de texto obligatoria (mínimo 3 caracteres).
-* **`email`**: Dirección de correo electrónico válida y única.
-* **`role`**: Rol del usuario restringido a `"admin"`, `"support"` o `"user"`.
-* **`is_active`**: Estado booleano del usuario (por defecto `True`).
+201 Created: Recurso creado con éxito.
 
----
+400 Bad Request: Datos de entrada inválidos de negocio (email duplicado, PATCH vacío).
 
-## ⚙️ Cabeceras HTTP Personalizadas
+404 Not Found: El usuario solicitado no existe en el sistema.
 
-Toda respuesta exitosa al crear un usuario incluye los encabezados personalizados:
-
-* `X-App-Name`: `device_systems`
-* `X-API-Version`: `1.0`
-
----
-
-## 📸 Evidencias de Funcionamiento (Swagger UI)
-
-### 1. Documentación General (Swagger UI)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 194942.png>)
-
-### 2. Creación de Usuario (`POST /users/` - 201 Created)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 201605.png>)
-
-### 3. Listado General (`GET /users/` - 200 OK)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 202056.png>)
-
-### 4. Filtro por Query Parameters (`GET /users/?role=admin`)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 202403.png>)
-
-### 5. Consulta por Path Parameter (`GET /users/{user_id}`)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 202456.png>)
-
-### 6. Control de Errores (`POST /users/` - Correo Duplicado 400 Bad Request)
-![alt text](<Imagenes/Captura de pantalla 2026-08-28 202705.png>)
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-* **Python 3.14**
-* **FastAPI**
-* **Pydantic v2**
-* **Uvicorn**
-* **uv** (Gestor de paquetes)
-* **Git / GitHub**
+422 Unprocessable Entity: Error de validación en la estructura del JSON por parte de Pydantic.
 
 
+# Explicación del Uso de Depends()
 
+Se utiliza Depends() para aplicar el principio de inyección de dependencias de FastAPI. Permite desacoplar las rutas del manejo directo de la base de datos o lógica de negocio, inyectando las instancias de los servicios de manera transparente, testeable y mantenible.
+
+
+# Explicación del Manejo de Errores
+
+El sistema utiliza excepciones personalizadas capturadas mediante la clase HTTPException de FastAPI. Cuando ocurre un fallo de negocio (como intentar registrar un correo repetido o consultar un ID que no existe), el servicio interrumpe el flujo y retorna una respuesta JSON estructurada con el código HTTP correspondiente.
+
+
+## Evidencias de Funcionamiento
+
+### Documentación
+![Swagger UI](imagenes/swagger_main.png)
+![ReDoc](imagenes/redoc_main.png)
+
+### Endpoints CRUD
+
+* **Listar Usuarios:** 
+![GET /users](imagenes/get_users_200.png)
+
+* **Obtener Usuario:** 
+![GET /users/1](imagenes/get_user_id_200.png)
+
+* **Crear Usuario:** 
+![POST /users](imagenes/post_user_201.png)
+
+* **Actualizar Usuario:** 
+![PUT /users/1](imagenes/put_user_200.png)
+
+* **Actualizar Parcial:** 
+![PATCH /users/1](imagenes/patch_user_200.png)
+
+* **Eliminar Usuario:** 
+![DELETE /users/2](imagenes/delete_user_200.png)
+
+### Errores Controlados
+
+* **404 Not Found:** 
+![404 Error](imagenes/error_404.png)
+
+* **400 Correo Duplicado:** 
+![400 Email Error](imagenes/error_400_email.png)
+
+* **400 Body Vacío:** 
+![400 Patch Error](imagenes/error_400_patch.png)
+
+* **422 Validation Error:** 
+![422 Error](imagenes/error_422.png)

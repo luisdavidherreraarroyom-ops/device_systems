@@ -1,75 +1,98 @@
-from fastapi import APIRouter, HTTPException, status, Query, Response
-from typing import List, Optional
-from app.schemas.user_schema import UserCreate, UserResponse
+from fastapi import APIRouter, Depends, status, HTTPException, Query
+from typing import Optional
+from app.schemas.user_schema import UserCreate, UserResponse, UserUpdatePartial
+from app.services import user_service
+from app.dependencies.user_dependencies import get_user_or_404, validate_unique_email, verify_custom_header
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"],
+    dependencies=[Depends(verify_custom_header)]
+)
 
-# Base de datos simulada en memoria con un usuario de prueba
-db_users = [
-    {
-        "id": 1,
-        "name": "Carlos Pérez",
-        "email": "carlos@device.com",
-        "role": "admin",
-        "is_active": True
-    }
-]
-id_counter = 2
+@router.get(
+    "/",
+    response_model=list[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Listar usuarios",
+    description="Retorna la lista general de usuarios con filtros opcionales por rol o estado.",
+    response_description="Lista de usuarios encontrada"
+)
+def list_users(
+    role: Optional[str] = Query(None, description="Filtrar por rol: admin, developer, support, user"),
+    is_active: Optional[bool] = Query(None, description="Filtrar por estado activo (true/false)")
+):
+    return user_service.get_all_users(role=role, is_active=is_active)
 
-# Función auxiliar para inyectar cabeceras personalizadas (Fase 5)
-def set_custom_headers(response: Response):
-    response.headers["X-App-Name"] = "device_systems"
-    response.headers["X-API-Version"] = "1.0"
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Consultar usuario por ID",
+    description="Retorna la información detallada de un usuario específico por su ID.",
+    response_description="Usuario encontrado"
+)
+def get_user(user: dict = Depends(get_user_or_404)):
+    return user
 
-# --- FASE 4: REGISTRAR USUARIO (POST) ---
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_user(user: UserCreate, response: Response):
-    global id_counter
-    
-    # Validar correo duplicado
-    if any(u["email"] == user.email for u in db_users):
+@router.post(
+    "/",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear un nuevo usuario",
+    description="Crea un nuevo usuario validando que el correo no esté duplicado.",
+    response_description="Usuario creado exitosamente"
+)
+def create_user(user_data: UserCreate):
+    validate_unique_email(user_data.email)
+    return user_service.create_user(user_data)
+
+@router.put(
+    "/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar usuario completamente",
+    description="Reemplaza todos los datos de un usuario existente.",
+    response_description="Usuario actualizado correctamente"
+)
+def update_user_put(
+    user_data: UserCreate,
+    user: dict = Depends(get_user_or_404)
+):
+    validate_unique_email(user_data.email, current_user_id=user["id"])
+    return user_service.update_user_full(user["id"], user_data)
+
+@router.patch(
+    "/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar usuario parcialmente",
+    description="Modifica únicamente uno o varios campos enviados por el cliente.",
+    response_description="Usuario modificado parcialmente"
+)
+def update_user_patch(
+    user_data: UserUpdatePartial,
+    user: dict = Depends(get_user_or_404)
+):
+    update_fields = user_data.model_dump(exclude_unset=True)
+    if not update_fields:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo electrónico ya está registrado en device_systems."
+            detail="Debe enviar al menos un campo para actualizar"
         )
     
-    user_dict = user.model_dump()
-    user_dict["id"] = id_counter
-    db_users.append(user_dict)
-    id_counter += 1
-    
-    set_custom_headers(response)
-    return user_dict
+    if "email" in update_fields:
+        validate_unique_email(update_fields["email"], current_user_id=user["id"])
 
-# --- FASE 3: OBTENER USUARIOS Y FILTRAR (GET) ---
-@router.get("/", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
-def get_users(
-    response: Response,
-    role: Optional[str] = Query(None, description="Filtrar por rol (admin, support, user)"),
-    is_active: Optional[bool] = Query(None, description="Filtrar por estado activo/inactivo")
-):
-    filtered_users = db_users
-    
-    # Filtro por rol (?role=admin)
-    if role is not None:
-        filtered_users = [u for u in filtered_users if u["role"] == role]
-        
-    # Filtro por estado activo (?is_active=true)
-    if is_active is not None:
-        filtered_users = [u for u in filtered_users if u["is_active"] == is_active]
-        
-    set_custom_headers(response)
-    return filtered_users
+    return user_service.update_user_partial(user["id"], user_data)
 
-# --- FASE 3: OBTENER USUARIO POR ID (GET /{user_id}) ---
-@router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
-def get_user_by_id(user_id: int, response: Response):
-    for u in db_users:
-        if u["id"] == user_id:
-            set_custom_headers(response)
-            return u
-            
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Usuario con ID {user_id} no encontrado."
-    )
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Eliminar usuario",
+    description="Elimina un usuario existente del sistema por su ID.",
+    response_description="Mensaje de confirmación de eliminación"
+)
+def delete_user(user: dict = Depends(get_user_or_404)):
+    user_service.delete_user(user["id"])
+    return {"message": f"Usuario con ID {user['id']} eliminado correctamente"}

@@ -3,13 +3,17 @@ from app.routes.user_routes import router as user_router
 
 app = FastAPI(
     title="device_systems API",
-    description="API REST funcional para administrar usuarios del sistema device_systems",
-    version="1.0.0"
+    description="API REST modularizada con CRUD completo para la gestión de usuarios, manejo profesional de errores y Dependency Injection.",
+    version="2.0.0",
+    contact={
+        "name": "Luis David Herrera Arroyo",
+        "email": "luisdavidherreraarroyom@gmail.com"
+    }
 )
 
-# Registrar el enrutador de usuarios
+# Registrar rutas
 app.include_router(user_router)
 
-@app.get("/", tags=["Health Check"])
+@app.get("/", tags=["Root"])
 def root():
-    return {"message": "API device_systems ejecutándose correctamente."}
+    return {"message": "Bienvenido a la API device_systems v2.0.0"}
