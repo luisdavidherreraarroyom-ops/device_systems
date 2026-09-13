@@ -1,134 +1,137 @@
-# device_systems - API REST v2.0.0
+# Device Systems API - Migración a SQLite y SQLAlchemy
+Evidencia: GA1-220501096-01-AA1-EV09 – FastAPI con SQLAlchemy: Persistencia de Datos y CRUD sobre Base de Datos en device_systems
+Desarrollado por: Luis David Herrera Arroyo  
+Tecnologías principales: FastAPI, SQLAlchemy, SQLite, Pydantic v2
 
-## Descripción
-Evolución de la API REST **device_systems** desarrollada en FastAPI. Implementa el CRUD completo del recurso users, separación de responsabilidades en 5 capas, manejo profesional de excepciones HTTP, inyección de dependencias con Depends() y documentación interactiva bajo estándar OpenAPI.
+Descripción del Proyecto.
 
-## Tecnologías Utilizadas
-- Python 3.11+
-- FastAPI
-- Uvicorn
-- Pydantic v2
+Este proyecto consiste en la evolución y migración de la API REST device_systems, pasando de una arquitectura basada en almacenamiento en memoria a una persistencia relacional permanente en base de datos SQLite, utilizando SQLAlchemy como ORM (Object-Relational Mapping).
 
-## Instalación de Dependencias
+El sistema gestiona registros de usuarios permitiendo operaciones CRUD completas, filtrados avanzados, ordenamiento y validación estricta de tipos de datos.
 
-1. Clonar el repositorio:
-   ```bash
-   git clone [https://github.com/luisdavidherreraarroyom-ops/device_systems.git](https://github.com/luisdavidherreraarroyom-ops/device_systems.git)
-   cd device_systems
 
-   python -m venv .venv
-# En Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
+🏗️ Arquitectura del Proyecto.
 
-# Instalar dependencias:
-pip install -r requirements.txt
+El proyecto está estructurado bajo una arquitectura limpia en capas para facilitar el mantenimiento y la escalabilidad:
 
-# Comando para Ejecutar el Servidor
-python -m uvicorn app.main:app --reload
+Plaintext
+device_systems/
+│
+├── app/
+│   ├── database/             # Capa 1: Configuración de la conexión a la base de datos
+│   │   └── connection.py     # Engine SQLite y SessionLocal
+│   ├── dependencies/         # Capa 2: Inyección de dependencias
+│   │   └── database_dependency.py # Generador de sesión de DB (get_db)
+│   ├── models/               # Capa 3: Modelos ORM (Tablas de SQLite)
+│   │   └── user_model.py     # Definición de la tabla 'users'
+│   ├── schemas/              # Capa 4: Schemas de validación DTO (Pydantic)
+│   │   └── user_schema.py    # DTOs para solicitudes y respuestas
+│   ├── services/             # Capa 5: Lógica de negocio (CRUD)
+│   │   └── user_service.py   # Consultas SQLAlchemy y reglas de negocio
+│   ├── routes/               # Controladores y Endpoints HTTP
+│   │   └── user_routes.py    # Mapeo de rutas REST (/users)
+│   └── main.py               # Punto de entrada y migración automática (create_all)
+│
+├── .venv/                    # Entorno virtual de Python
+├── device_systems.db         # Archivo de base de datos SQLite (Generado automáticamente)
+├── requirements.txt          # Dependencias del proyecto
+└── README.md                 # Documentación técnica
 
-# Acceso a la documentación interactiva:
 
-Swagger UI: http://127.0.0.1:8000/docs
+Requisitos e Instalación.
 
-ReDoc: http://127.0.0.1:8000/redoc
+Prerrequisitos
+- Python 3.10+ (Probado y validado en Python 3.14)
+- Git Bash o PowerShell
 
-## Tabla de Endpoints
 
-| Método | Ruta | Descripción | Estado Exitoso |
+Pasos de Instalación
+
+Clonar el repositorio:
+Bash
+- git clone 
+- cd device_systems
+
+Crear y activar el entorno virtual:
+PowerShell
+- python -m venv .venv
+- .\.venv\Scripts\Activate.ps1
+
+Instalar dependencias:
+PowerShell
+- python -m pip install -r requirements.txt
+
+
+Ejecución del Servidor
+
+Para iniciar la aplicación en modo de desarrollo con recarga automática:
+PowerShell
+- python -m uvicorn app.main:app --reload
+
+
+Al arrancar por primera vez, la aplicación creará automáticamente la base de datos device_systems.db en la raíz del proyecto.
+
+Accede a la documentación interactiva en tu navegador:
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+
+
+## Documentación de los Endpoints (API REST)
+
+| Método | Endpoint | Descripción | Código Éxito |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/users` | Obtener la lista completa de usuarios | `200 OK` |
-| `GET` | `/users/{user_id}` | Obtener un usuario por su ID | `200 OK` |
-| `POST` | `/users` | Crear un nuevo usuario | `201 Created` |
-| `PUT` | `/users/{user_id}` | Actualizar un usuario completamente | `200 OK` |
-| `PATCH` | `/users/{user_id}` | Actualizar parcialmente un usuario | `200 OK` |
-| `DELETE` | `/users/{user_id}` | Eliminar un usuario por su ID | `200 OK` |
+| **GET** | `/users` | Obtiene la lista general con filtros opcionales (`role`, `is_active`, `order_by`) | `200 OK` |
+| **GET** | `/users/{id}` | Obtiene los detalles de un usuario específico por su ID | `200 OK` |
+| **POST** | `/users` | Registra un nuevo usuario en la base de datos | `201 Created` |
+| **PUT** | `/users/{id}` | Actualiza completamente los datos de un usuario | `200 OK` |
+| **PATCH** | `/users/{id}` | Actualiza parcialmente uno o más campos de un usuario | `200 OK` |
+| **DELETE** | `/users/{id}` | Elimina físicamente un usuario de la base de datos | `200 OK` |
 
-# Ejemplos de Peticiones y Respuestas
 
-Crear Usuario (POST /users)
-Request Body:
+Ejemplos de Peticiones (JSON)
 
+1. Creación de Usuario (POST /users)
 JSON
 {
-  "name": "Carlos Gomez",
-  "email": "carlos@example.com",
-  "role": "developer",
+  "name": "Luis Herrera",
+  "email": "luis@ejemplo.com",
+  "role": "admin",
   "is_active": true
 }
-Response (201 Created):
 
+2. Respuesta Exitosa (201 Created)
 JSON
 {
-  "name": "Carlos Gomez",
-  "email": "carlos@example.com",
-  "role": "developer",
+  "id": 1,
+  "name": "Luis Herrera",
+  "email": "luis@ejemplo.com",
+  "role": "admin",
   "is_active": true,
-  "id": 3
+  "created_at": "2026-09-12T21:20:00"
 }
 
-# Códigos de Estado Usados
-
-200 OK: Petición procesada correctamente.
-
-201 Created: Recurso creado con éxito.
-
-400 Bad Request: Datos de entrada inválidos de negocio (email duplicado, PATCH vacío).
-
-404 Not Found: El usuario solicitado no existe en el sistema.
-
-422 Unprocessable Entity: Error de validación en la estructura del JSON por parte de Pydantic.
+3. Actualización Parcial (PATCH /users/1)
+JSON
+{
+  "is_active": false
+}
 
 
-# Explicación del Uso de Depends()
+Control de Errores e Integridad
 
-Se utiliza Depends() para aplicar el principio de inyección de dependencias de FastAPI. Permite desacoplar las rutas del manejo directo de la base de datos o lógica de negocio, inyectando las instancias de los servicios de manera transparente, testeable y mantenible.
+- Validación de correos únicos: Retorna error HTTP 400 Bad Request si se intenta registrar un email existente.
+
+- Manejo de registros no encontrados: Retorna HTTP 404 Not Found al buscar o modificar IDs inexistentes.
+
+- Cierre de conexiones: Implementado mediante el patrón de inyección get_db con bloque finally: db.close() para evitar bloqueos en SQLite.
 
 
-# Explicación del Manejo de Errores
+servidor corriendo en la terminal
+![alt text](imagenes/image.png)
 
-El sistema utiliza excepciones personalizadas capturadas mediante la clase HTTPException de FastAPI. Cuando ocurre un fallo de negocio (como intentar registrar un correo repetido o consultar un ID que no existe), el servicio interrumpe el flujo y retorna una respuesta JSON estructurada con el código HTTP correspondiente.
+Interfaz de Swagger UI 
+![alt text](<imagenes/image copy.png>)
 
+Prueba de la petición POST /users exitosa (201 Created)
+![alt text](<imagenes/image copy 2.png>)
 
-## Evidencias de Funcionamiento
-
-### Documentación
-
-**Swagger UI**
-![Swagger UI](imagenes/swagger_main.png)
-
-**ReDoc**
-![ReDoc](imagenes/redoc_main.png)
-
-### Endpoints CRUD
-
-* **Listar Usuarios:** 
-![GET /users](imagenes/get_users_200.png)
-
-* **Obtener Usuario:** 
-![GET /users/1](imagenes/get_user_id_200.png)
-
-* **Crear Usuario:** 
-![POST /users](imagenes/post_user_201.png)
-
-* **Actualizar Usuario:** 
-![PUT /users/1](imagenes/put_user_200.png)
-
-* **Actualizar Parcial:** 
-![PATCH /users/1](imagenes/patch_user_200.png)
-
-* **Eliminar Usuario:** 
-![DELETE /users/2](imagenes/delete_user_200.png)
-
-### Errores Controlados
-
-* **404 Not Found:** 
-![404 Error](imagenes/error_404.png)
-
-* **400 Correo Duplicado:** 
-![400 Email Error](imagenes/error_400_email.png)
-
-* **400 Body Vacío:** 
-![400 Patch Error](imagenes/error_400_patch.png)
-
-* **422 Validation Error:** 
-![422 Error](imagenes/error_422.png)

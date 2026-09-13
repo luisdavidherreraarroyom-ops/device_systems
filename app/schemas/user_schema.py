@@ -1,30 +1,27 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Literal
+from datetime import datetime
+from typing import Literal, Optional
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-# Roles permitidos en la aplicación
-ALLOWED_ROLES = Literal["admin", "developer", "support", "user"]
-
-# Base común para esquemas
 class UserBase(BaseModel):
-    name: str = Field(..., example="Luis Herrera")
-    email: EmailStr = Field(..., example="luis@example.com")
-    role: ALLOWED_ROLES = Field(..., example="developer")
-    is_active: bool = Field(default=True, example=True)
+    name: str = Field(..., min_length=3, description="Nombre del usuario")
+    email: EmailStr = Field(..., description="Correo electrónico válido")
+    role: Literal["admin", "support", "user"] = Field(..., description="Rol del usuario")
+    is_active: bool = True
 
-# Esquema para crear (POST) o actualizar completo (PUT)
 class UserCreate(UserBase):
     pass
 
-# Esquema para actualización parcial (PATCH) - Todos los campos opcionales
-class UserUpdatePartial(BaseModel):
-    name: Optional[str] = Field(None, example="Luis Herrera Modificado")
-    email: Optional[EmailStr] = Field(None, example="luis_nuevo@example.com")
-    role: Optional[ALLOWED_ROLES] = Field(None, example="admin")
-    is_active: Optional[bool] = Field(None, example=False)
+class UserUpdate(UserBase):
+    pass
 
-# Esquema para respuestas de la API
+class UserPatch(BaseModel):
+    name: Optional[str] = Field(None, min_length=3)
+    email: Optional[EmailStr] = None
+    role: Optional[Literal["admin", "support", "user"]] = None
+    is_active: Optional[bool] = None
+
 class UserResponse(UserBase):
     id: int
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
