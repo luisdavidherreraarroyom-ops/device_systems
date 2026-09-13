@@ -29,7 +29,8 @@ device_systems/
 ├── .venv/                         # Entorno virtual
 ├── device_systems.db              # Base de datos SQLite
 ├── requirements.txt               # Dependencias del proyecto
-└── README.md                      # Documentación                # Documentación técnica ```
+└── README.md                      # Documentación
+```
 
 
 Requisitos e Instalación.
