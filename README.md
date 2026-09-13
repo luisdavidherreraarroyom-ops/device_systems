@@ -14,28 +14,22 @@ El sistema gestiona registros de usuarios permitiendo operaciones CRUD completas
 
 El proyecto está estructurado bajo una arquitectura limpia en capas para facilitar el mantenimiento y la escalabilidad:
 
-Plaintext
+```text
 device_systems/
 │
 ├── app/
-│   ├── database/             # Capa 1: Configuración de la conexión a la base de datos
-│   │   └── connection.py     # Engine SQLite y SessionLocal
-│   ├── dependencies/         # Capa 2: Inyección de dependencias
-│   │   └── database_dependency.py # Generador de sesión de DB (get_db)
-│   ├── models/               # Capa 3: Modelos ORM (Tablas de SQLite)
-│   │   └── user_model.py     # Definición de la tabla 'users'
-│   ├── schemas/              # Capa 4: Schemas de validación DTO (Pydantic)
-│   │   └── user_schema.py    # DTOs para solicitudes y respuestas
-│   ├── services/             # Capa 5: Lógica de negocio (CRUD)
-│   │   └── user_service.py   # Consultas SQLAlchemy y reglas de negocio
-│   ├── routes/               # Controladores y Endpoints HTTP
-│   │   └── user_routes.py    # Mapeo de rutas REST (/users)
-│   └── main.py               # Punto de entrada y migración automática (create_all)
+│   ├── database/                  # Capa 1: Conexión (connection.py)
+│   ├── dependencies/              # Capa 2: Inyección (database_dependency.py)
+│   ├── models/                    # Capa 3: Modelos ORM (user_model.py)
+│   ├── schemas/                   # Capa 4: Schemas DTO (user_schema.py)
+│   ├── services/                  # Capa 5: Lógica CRUD (user_service.py)
+│   ├── routes/                    # Controladores REST (user_routes.py)
+│   └── main.py                    # Punto de entrada
 │
-├── .venv/                    # Entorno virtual de Python
-├── device_systems.db         # Archivo de base de datos SQLite (Generado automáticamente)
-├── requirements.txt          # Dependencias del proyecto
-└── README.md                 # Documentación técnica
+├── .venv/                         # Entorno virtual
+├── device_systems.db              # Base de datos SQLite
+├── requirements.txt               # Dependencias del proyecto
+└── README.md                      # Documentación                # Documentación técnica
 
 
 Requisitos e Instalación.
