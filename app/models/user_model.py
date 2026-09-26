@@ -1,6 +1,7 @@
-from datetime import datetime
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy.orm import relationship
 from app.database.connection import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -9,5 +10,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
     role = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Relación One-to-Many
+    loans = relationship("Loan", back_populates="user")
