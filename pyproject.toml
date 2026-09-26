@@ -5,7 +5,13 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.20.0",
     "fastapi>=0.141.1",
     "pydantic[email]>=2.13.4",
     "uvicorn[standard]>=0.52.4",
 ]
+[tool.pylint.main]
+ignore-paths = ["alembic/versions"]
+
+[tool.pylint.messages_control]
+disable = ["missing-module-docstring", "missing-function-docstring", "line-too-long"]

@@ -9,7 +9,16 @@ class UserBase(BaseModel):
     is_active: bool = True
 
 class UserCreate(UserBase):
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Ana Pérez",
+                "email": "ana@sena.edu.co",
+                "role": "user",
+                "is_active": True,
+            }
+        }
+    )
 
 class UserUpdate(UserBase):
     pass
@@ -22,6 +31,6 @@ class UserPatch(BaseModel):
 
 class UserResponse(UserBase):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

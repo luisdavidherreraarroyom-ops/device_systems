@@ -1,132 +1,108 @@
-# Device Systems API - Migración a SQLite y SQLAlchemy
-Evidencia: GA1-220501096-01-AA1-EV09 – FastAPI con SQLAlchemy: Persistencia de Datos y CRUD sobre Base de Datos en device_systems
-Desarrollado por: Luis David Herrera Arroyo  
-Tecnologías principales: FastAPI, SQLAlchemy, SQLite, Pydantic v2
+# Device Systems API - FastAPI & SQLAlchemy
 
-Descripción del Proyecto.
-
-Este proyecto consiste en la evolución y migración de la API REST device_systems, pasando de una arquitectura basada en almacenamiento en memoria a una persistencia relacional permanente en base de datos SQLite, utilizando SQLAlchemy como ORM (Object-Relational Mapping).
-
-El sistema gestiona registros de usuarios permitiendo operaciones CRUD completas, filtrados avanzados, ordenamiento y validación estricta de tipos de datos.
+- Sistema backend profesional de gestión de inventario y préstamos de dispositivos tecnológicos desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic**, **SQLite** y **Pydantic**. Este proyecto implementa validaciones estrictas, control de relaciones de bases de datos y un manejo robusto de excepciones y códigos de estado HTTP.
 
 
-🏗️ Arquitectura del Proyecto.
+- Tecnologías y Librerías Utilizadas
 
-El proyecto está estructurado bajo una arquitectura limpia en capas para facilitar el mantenimiento y la escalabilidad:
+Python
 
-```text
-device_systems/
+FastAPI
+
+SQLAlchemy (ORM)
+
+Alembic (Migraciones de base de datos)
+
+Pydantic (Validación de esquemas de datos)
+
+SQLite (Base de datos relacional)
+
+Uvicorn (Servidor ASGI)
+
+
+- Estructura del Proyecto
+
+''device_systems/
 │
+├── alembic/              # Migraciones de base de datos
 ├── app/
-│   ├── database/                  # Capa 1: Conexión (connection.py)
-│   ├── dependencies/              # Capa 2: Inyección (database_dependency.py)
-│   ├── models/                    # Capa 3: Modelos ORM (user_model.py)
-│   ├── schemas/                   # Capa 4: Schemas DTO (user_schema.py)
-│   ├── services/                  # Capa 5: Lógica CRUD (user_service.py)
-│   ├── routes/                    # Controladores REST (user_routes.py)
-│   └── main.py                    # Punto de entrada
+│   ├── models/           # Modelos SQLAlchemy (User, Device, Loan)
+│   ├── schemas/          # Esquemas Pydantic y validaciones
+│   ├── routers/          # Endpoints de la API (Users, Devices, Loans)
+│   └── database.py       # Configuración de la sesión de BD
 │
-├── .venv/                         # Entorno virtual
-├── device_systems.db              # Base de datos SQLite
-├── requirements.txt               # Dependencias del proyecto
-└── README.md                      # Documentación
-```
+├── alembic.ini           # Configuración de Alembic
+├── main.py               # Punto de entrada de FastAPI
+└── requirements.txt      # Dependencias del proyecto''
 
 
-Requisitos e Instalación.
-
-Prerrequisitos
-- Python 3.10+ (Probado y validado en Python 3.14)
-- Git Bash o PowerShell
-
-
-Pasos de Instalación
-
-Clonar el repositorio:
-Bash
-- git clone 
-- cd device_systems
-
-Crear y activar el entorno virtual:
-PowerShell
-- python -m venv .venv
-- .\.venv\Scripts\Activate.ps1
-
-Instalar dependencias:
-PowerShell
-- python -m pip install -r requirements.txt
+- Instalación y Configuración Local
+1. Clona el repositorio e ingresa al directorio del proyecto.
+2. Crea y activa un entorno virtual:
+python -m venv venv
+# En Windows:
+venv\Scripts\activate
+3. Instala las dependencias:
+pip install -r requirements.txt
+4. Ejecuta las migraciones de Alembic para inicializar la base de datos:
+alembic upgrade head
+5. Inicia el servidor de desarrollo con Uvicorn:
+uvicorn main:app --reload
 
 
-Ejecución del Servidor
+- Documentación Interactiva (Swagger UI / ReDoc)
+Una vez iniciado el servidor, puedes acceder a la documentación interactiva en el navegador:
 
-Para iniciar la aplicación en modo de desarrollo con recarga automática:
-PowerShell
-- python -m uvicorn app.main:app --reload
-
-
-Al arrancar por primera vez, la aplicación creará automáticamente la base de datos device_systems.db en la raíz del proyecto.
-
-Accede a la documentación interactiva en tu navegador:
-- Swagger UI: http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
+Swagger UI: http://127.0.0.1:8000/docs
+ReDoc: http://127.0.0.1:8000/redoc
 
 
-## Documentación de los Endpoints (API REST)
+- Evidencias de Pruebas Funcionales y Migraciones (Swagger UI)
+A continuación se registra la ejecución, historial y validación completa de todas las evidencias del sistema:
 
-| Método | Endpoint | Descripción | Código Éxito |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/users` | Obtiene la lista general con filtros opcionales (`role`, `is_active`, `order_by`) | `200 OK` |
-| **GET** | `/users/{id}` | Obtiene los detalles de un usuario específico por su ID | `200 OK` |
-| **POST** | `/users` | Registra un nuevo usuario en la base de datos | `201 Created` |
-| **PUT** | `/users/{id}` | Actualiza completamente los datos de un usuario | `200 OK` |
-| **PATCH** | `/users/{id}` | Actualiza parcialmente uno o más campos de un usuario | `200 OK` |
-| **DELETE** | `/users/{id}` | Elimina físicamente un usuario de la base de datos | `200 OK` |
+1. Control de Versiones y Migraciones (Alembic)
+Inicialización de Alembic:![alt text](imagenes/01_alembic_init.png)
 
+Creación de Revisión:![alt text](imagenes/02_alembic_revision.png)
 
-Ejemplos de Peticiones (JSON)
+Aplicación de Migraciones (upgrade head):![alt text](imagenes/03_alembic_upgrade_head.png)
 
-1. Creación de Usuario (POST /users)
-JSON
-{
-  "name": "Luis Herrera",
-  "email": "luis@ejemplo.com",
-  "role": "admin",
-  "is_active": true
-}
+Historial de Migraciones:![imagenes/07_alembic_history.png](imagenes/07_alembic_history.png)
 
-2. Respuesta Exitosa (201 Created)
-JSON
-{
-  "id": 1,
-  "name": "Luis Herrera",
-  "email": "luis@ejemplo.com",
-  "role": "admin",
-  "is_active": true,
-  "created_at": "2026-09-12T21:20:00"
-}
+2. Documentación y Vistas Generales
+Endpoints en Swagger UI:![alt text](imagenes/04_swagger_endpoints.png)
 
-3. Actualización Parcial (PATCH /users/1)
-JSON
-{
-  "is_active": false
-}
+Tablas Generadas en Base de Datos:![alt text](imagenes/05_tablas_generadas.png)
 
+Documentación en ReDoc:![alt text](imagenes/06_redoc.png)
 
-Control de Errores e Integridad
+Validación de Errores de Pydantic / Estado (422):![alt text](imagenes/08_status_422.png)
 
-- Validación de correos únicos: Retorna error HTTP 400 Bad Request si se intenta registrar un email existente.
+3. Endpoints de Usuarios y Dispositivos
+Endpoints de Dispositivos y Préstamos:![alt text](imagenes/09_devices_loans_endpoint.png)
 
-- Manejo de registros no encontrados: Retorna HTTP 404 Not Found al buscar o modificar IDs inexistentes.
+Detalles y Consultas de Préstamos:![alt text](imagenes/10_loans_details_endpoint.png)
 
-- Cierre de conexiones: Implementado mediante el patrón de inyección get_db con bloque finally: db.close() para evitar bloqueos en SQLite.
+Creación de Usuario (POST /users):![alt text](imagenes/11_prueba2_crear_usuario.png)
 
+Creación de Dispositivo (POST /devices):![alt text](imagenes/12_prueba3_crear_dispositivo.png)
 
-servidor corriendo en la terminal
-![alt text](imagenes/image.png)
+4. Gestión y Lógica de Préstamos
+Creación de Préstamo (POST /loans):![alt text](imagenes/13_prueba4_crear_prestamo.png)
 
-Interfaz de Swagger UI 
-![alt text](<imagenes/image copy.png>)
+Validación de Conflicto - Dispositivo No Disponible (409 Conflict):![alt text](imagenes/14_prueba5_dispositivo_no_disponible.png)
 
-Prueba de la petición POST /users exitosa (201 Created)
-![alt text](<imagenes/image copy 2.png>)
+Listado General de Préstamos (GET /loans):![alt text](imagenes/15_prueba6_listar_prestamos.png)
 
+Devolución de Dispositivo (PATCH /loans/{id}/return):![alt text](imagenes/16_prueba7_devolver_prestamo.png)
+
+Filtrado por Estado (GET /loans?status=returned):![alt text](imagenes/17_prueba8_filtrar_prestamos.png)
+
+Consulta de Préstamo por ID (GET /loans/{id}):![alt text](imagenes/18_prueba9_detalle_prestamo.png)
+
+Historial por Usuario (GET /loans/user/{id}):![alt text](imagenes/19_prueba10_historial_usuario.png)
+
+Historial por Dispositivo (GET /loans/device/{id}):![alt text](imagenes/20_prueba11_historial_dispositivo.png)
+
+5. Manejo de Errores
+Recurso No Encontrado (404 Not Found):![alt text](imagenes/21_prueba12_error_404.png)
