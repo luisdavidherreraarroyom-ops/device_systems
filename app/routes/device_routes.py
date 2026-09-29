@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.dependencies.database_dependency import get_db
+from app.auth.dependencies import get_current_user, require_role
+from app.models.user_model import User
 from app.schemas.device_schema import DeviceCreate, DeviceUpdate, DeviceResponse
 from app.schemas.loan_schema import LoanDetailResponse
 from app.services import device_service, loan_service
@@ -74,9 +76,17 @@ def get_device_loans(device_id: int, db: Session = Depends(get_db)):
     response_model=DeviceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear un nuevo dispositivo",
-    responses={400: {"description": "Número de serie duplicado"}},
+    responses={
+        400: {"description": "Número de serie duplicado"},
+        401: {"description": "No autorizado"},
+        403: {"description": "Rol sin permisos"},
+    },
 )
-def create_device(device: DeviceCreate, db: Session = Depends(get_db)):
+def create_device(
+    device: DeviceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "support")),
+):
     existing_device = device_service.get_device_by_serial(db, device.serial_number)
     if existing_device:
         raise HTTPException(
@@ -96,10 +106,14 @@ def create_device(device: DeviceCreate, db: Session = Depends(get_db)):
     responses={
         400: {"description": "Número de serie duplicado"},
         404: {"description": "Dispositivo no encontrado"},
+        403: {"description": "Rol sin permisos"},
     },
 )
 def update_device(
-    device_id: int, device_data: DeviceUpdate, db: Session = Depends(get_db)
+    device_id: int,
+    device_data: DeviceUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "support")),
 ):
     updated_device = device_service.update_device(db, device_id, device_data)
     if not updated_device:
@@ -117,10 +131,14 @@ def update_device(
     responses={
         400: {"description": "Número de serie duplicado"},
         404: {"description": "Dispositivo no encontrado"},
+        403: {"description": "Rol sin permisos"},
     },
 )
 def patch_device(
-    device_id: int, device_data: DeviceUpdate, db: Session = Depends(get_db)
+    device_id: int,
+    device_data: DeviceUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "support")),
 ):
     updated_device = device_service.update_device(db, device_id, device_data)
     if not updated_device:
@@ -138,9 +156,14 @@ def patch_device(
     responses={
         404: {"description": "Dispositivo no encontrado"},
         409: {"description": "El dispositivo tiene préstamos registrados"},
+        403: {"description": "Rol sin permisos"},
     },
 )
-def delete_device(device_id: int, db: Session = Depends(get_db)):
+def delete_device(
+    device_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
     if not device_service.get_device_by_id(db, device_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
