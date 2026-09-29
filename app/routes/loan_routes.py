@@ -2,12 +2,15 @@
 from datetime import date
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.dependencies.database_dependency import get_db
+from app.auth.dependencies import get_current_user, require_role
+from app.models.user_model import User
 from app.schemas.loan_schema import LoanCreate, LoanDetailResponse, LoanResponse
 from app.services import loan_service, user_service
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/loans", tags=["Loans"])
 
@@ -47,6 +50,7 @@ def _search_loans(
     summary="Listar préstamos con datos de usuario y dispositivo",
     description="Igual que GET /loans: hace JOIN con users y devices y acepta los mismos filtros.",
     response_description="Lista de préstamos con usuario y dispositivo anidados",
+    responses={401: {"description": "No autorizado"}, 403: {"description": "Rol sin permisos"}},
 )
 def list_loan_details(
     status_filter: Optional[LoanStatus] = Query(None, alias="status"),
@@ -57,6 +61,7 @@ def list_loan_details(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "support")),
 ):
     return _search_loans(
         db, status_filter, user_id, device_id, user_email, device_type, date_from, date_to
@@ -137,9 +142,16 @@ def get_device_loans(device_id: int, db: Session = Depends(get_db)):
     responses={
         404: {"description": "Usuario o dispositivo no existe"},
         409: {"description": "El dispositivo no está disponible"},
+        401: {"description": "No autorizado"},
     },
 )
-def create_loan(loan_data: LoanCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def create_loan(
+    request: Request,
+    loan_data: LoanCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return loan_service.create_loan(db, loan_data)
 
 
@@ -152,7 +164,13 @@ def create_loan(loan_data: LoanCreate, db: Session = Depends(get_db)):
     responses={
         404: {"description": "Préstamo no encontrado"},
         409: {"description": "El préstamo ya fue devuelto"},
+        401: {"description": "No autorizado"},
+        403: {"description": "Rol sin permisos"},
     },
 )
-def return_loan(loan_id: int, db: Session = Depends(get_db)):
+def return_loan(
+    loan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "support")),
+):
     return loan_service.return_loan(db, loan_id)

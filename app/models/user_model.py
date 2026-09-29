@@ -9,7 +9,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
-    role = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="user")
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Relación One-to-Many

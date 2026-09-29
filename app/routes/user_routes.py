@@ -1,13 +1,16 @@
 """Rutas de usuarios."""
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.dependencies.database_dependency import get_db
+from app.auth.dependencies import get_current_user
+from app.models.user_model import User
 from app.schemas.loan_schema import LoanResponse
 from app.schemas.user_schema import UserCreate, UserResponse, UserUpdate
 from app.services import loan_service, user_service
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -18,11 +21,15 @@ router = APIRouter(prefix="/users", tags=["Users"])
     summary="Listar usuarios",
     description="Obtiene una lista de usuarios con filtros opcionales.",
     response_description="Lista de usuarios",
+    responses={401: {"description": "No autorizado"}},
 )
+@limiter.limit("30/minute")
 def get_users(
+    request: Request,
     role: Optional[str] = Query(None, description="Filtrar por rol"),
     is_active: Optional[bool] = Query(None, description="Filtrar por estado activo"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     return user_service.get_all_users(db, role=role, is_active=is_active)
 
@@ -31,9 +38,16 @@ def get_users(
     "/{user_id}",
     response_model=UserResponse,
     summary="Obtener usuario por ID",
-    responses={404: {"description": "Usuario no encontrado"}},
+    responses={
+        404: {"description": "Usuario no encontrado"},
+        401: {"description": "No autorizado"},
+    },
 )
-def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     db_user = user_service.get_user_by_id(db, user_id)
     if not db_user:
         raise HTTPException(
